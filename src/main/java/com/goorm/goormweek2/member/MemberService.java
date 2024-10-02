@@ -1,6 +1,7 @@
 package com.goorm.goormweek2.member;
 
 import com.goorm.goormweek2.security.token.TokenDTO;
+import com.goorm.goormweek2.security.token.TokenProvider;
 import jakarta.transaction.Transactional;
 import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
