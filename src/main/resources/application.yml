@@ -3,4 +3,7 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: YOUR_PASSWORD
+      password:
+
+jwt:
+  secret: ${JWT_SECRET}

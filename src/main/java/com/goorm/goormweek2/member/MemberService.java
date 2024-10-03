@@ -1,5 +1,6 @@
 package com.goorm.goormweek2.member;
 
+import com.goorm.goormweek2.security.token.TokenBlacklistService;
 import com.goorm.goormweek2.security.token.TokenDTO;
 import com.goorm.goormweek2.security.token.TokenProvider;
 import jakarta.transaction.Transactional;
@@ -19,6 +20,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final AuthenticationManager authenticationManager;
     private final TokenProvider tokenProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
     //회원가입
     public void register(String email, String password) {
@@ -34,14 +36,16 @@ public class MemberService {
     @Transactional
     public TokenDTO login(String email, String password) {
         Member member = memberRepository.findByEmail(email)
-            .orElseThrow(() -> new NoSuchElementException("Member with email " + email + " not found"));
+                .orElseThrow(() -> new NoSuchElementException("Member with email " + email + " not found"));
+
         if (!encoder.matches(password, member.getPassword())) {
             throw new IllegalArgumentException("Invalid password");
         } else {
-            UsernamePasswordAuthenticationToken token
-                = new UsernamePasswordAuthenticationToken(email, password);
-            Authentication authentication
-                = authenticationManager.authenticate(token);
+            //UsernamePasswordAuthenticationToken 변수를 authToken으로 변경
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, password);
+            Authentication authentication = authenticationManager.authenticate(authToken);
+
+            //TokenDTO는 여전히 token으로 유지
             TokenDTO token = tokenProvider.generateToken(authentication);
 
             return token;
@@ -51,5 +55,7 @@ public class MemberService {
     //로그아웃
     public void logout(String token) {
 //        로그아웃 구현
+        long expiration = tokenProvider.getExpiration(token);
+        tokenBlacklistService.addToBlacklist(token, expiration);
     }
 }
